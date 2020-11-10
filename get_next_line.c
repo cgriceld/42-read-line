@@ -3,7 +3,7 @@
 
 #include "get_next_line.h"
 
-#define BUFFER_SIZE 21
+#define BUFFER_SIZE 3
 
 /*
 ** Reads and writes to line one string (before the first \n) from fd.
@@ -14,112 +14,142 @@
 ** -1 - an error happened;
 */
 
-char	*ft_strjoin(char const *s1, char const *s2)
+int	del_one(t_lstfd **head, const int fd)
 {
-	char	*join;
-	char	*tmp;
+	t_lstfd *tmp;
+	t_lstfd *prev;
 
-	if (!s1 || !s2)
-		return (NULL);
-	join = (char *)malloc(ft_strlen(s1) + ft_strlen(s2) + 1);
-	if (!join)
-		return (NULL);
-	tmp = join;
-	while (*s1)
-		*tmp++ = *s1++;
-	while (*s2)
-		*tmp++ = *s2++;
-	*tmp = '\0';
-	return (join);
-}
-
-int	buff_read(const int fd, t_lstfd **tmp, char **line)
-{
-	char	*buff;
-	char	*prev_cashe;
-	ssize_t	bytes_read;
-	int		cashe_flag;
-
-	while (bytes_read = read(fd, buff, BUFFER_SIZE))
+	tmp = *head;
+	while (tmp->fd != fd)
 	{
-		if (!(buff = (char *)malloc(sizeof(BUFFER_SIZE + 1))))
-			return (-1);
-		if (bytes_read < 0)
-			return (-1);
-		buff[bytes_read] = '\0';
-		prev_cashe = (*tmp)->cashe; // correct if no cashe, cashe = null, correct strjoin
-		(*tmp)->cashe = ft_strjoin((*tmp)->cashe, buff);
-		free(prev_cashe);
-		free(buff);
-		if (!((*tmp)->cashe))
-			return (-1);
-		if ((cashe_flag = check_cashe(&tmp, line)) == -1)
-			return (-1);
-		if (cashe_flag)
-			return (1);
+		prev = tmp;
+		tmp = tmp->next;
 	}
+	prev->next = tmp->next;
+	free(tmp->cashe);
+	free(tmp);
 	return (0);
 }
 
-int	check_cashe(t_lstfd **tmp, char **line)
+/*
+** 1) If head is NULL (list is empty), tries to create node with new_node function.
+** 2) Try to find node with such fd, if finds, returns pointer to node,
+** otherwise -- creates and appends back new node.
+*/
+t_lstfd	*find_node(t_lstfd **head, const int fd)
+{
+	t_lstfd *tmp;
+
+	if (!*head)
+	{
+		*head = (t_lstfd *)malloc(sizeof(t_lstfd));
+		if (!*head)
+			return (NULL);
+		(*head)->fd = fd;
+		(*head)->cashe = NULL;
+		(*head)->next = NULL;
+		return (*head);
+	}
+	tmp = *head;
+	while (tmp->next && tmp->fd != fd)
+		tmp = tmp->next;
+	if (tmp->fd == fd)
+		return (tmp);
+	tmp->next = (t_lstfd *)malloc(sizeof(t_lstfd));
+	if (!tmp->next)
+			return (NULL);
+	tmp = tmp->next;
+	tmp->fd = fd;
+	tmp->cashe = NULL;
+	tmp->next = NULL;
+	return (tmp);
+}
+
+void	check_cashe(t_lstfd *tmp, char **line, int *flag)
 {
 	char *n;
 	char *sub_cashe;
 
-	if (!*tmp)
-		return (0); // no cashe at all
-	if ((n = ft_strchr((*tmp)->cashe, '\n'))) // ptr or null
+	if (!tmp->cashe)
+		return ;
+	if ((n = ft_strchr(tmp->cashe, '\n')))
 	{
-		*n = '\0';
-		*line = ft_substr((*tmp)->cashe, 0, n - (*tmp)->cashe);
-		if (!line)
-			return (-1);
-		n++;
-		sub_cashe = ft_substr(n, 0, ft_strlen(n));
-		if (!sub_cashe)
-			return (-1);
-		free((*tmp)->cashe);
-		(*tmp)->cashe = sub_cashe;
-		return (1);
+		*n++ = '\0';
+		if (!(*line = ft_strdup(tmp->cashe)) || !(sub_cashe = ft_strdup(n)))
+		{
+			*flag = -1;
+			return ;
+		}
+		free(tmp->cashe);
+		tmp->cashe = ft_strdup(sub_cashe);
+		free(sub_cashe);
+		*flag = 1;
 	}
-	return (0);
 }
 
+void	buff_read(char *buff, t_lstfd *tmp, char **line, int *flag)
+{
+	char	*prev_cashe;
+	ssize_t	bytes_read;
+
+	while (!*flag && (bytes_read = read(tmp->fd, buff, BUFFER_SIZE)) > 0)
+	{
+		buff[bytes_read] = '\0';
+		if (!tmp->cashe)
+			tmp->cashe = ft_strdup(buff);
+		else
+		{
+			prev_cashe = tmp->cashe;
+			tmp->cashe = ft_strjoin(tmp->cashe, buff);
+			free(prev_cashe);
+		}
+		if (!tmp->cashe)
+		{
+			*flag = -1;
+			return ;
+		}
+		check_cashe(tmp, line, flag);
+		if (*flag == -1)
+			return;
+	}
+	if (bytes_read < 0)
+		*flag = -1;
+}
 
 int	get_next_line(int fd, char **line)
 {
-	static t_lstfd	*head; // init with NULL
+	static t_lstfd	*head;
 	t_lstfd			*tmp;
-	int				cashe_flag;
-	int				buff_flag;
+	char			*buff;
+	int				flag;
 	
-
 	if (fd < 0 || !line || BUFFER_SIZE <= 0)
 		return (-1);
-	if (!(tmp = find_node(&head, fd))) // & because if null, will alloc memory
-		return (-1);
-	if ((cashe_flag = check_cashe(&tmp, line)) == -1)
-		return (-1);
-	if (cashe_flag) // find line in cash, no need to read
-		return (1);
-	if ((buff_flag = buff_read(fd, &tmp, line)) == -1)
-		return (-1);
-	if (buff_flag) // find line in cash, no need to read
-		return (1);
-	
+	if (!(tmp = find_node(&head, fd)))
+		return (del_all(&head, NULL));
+	//free(*line);
+	flag = 0;
+	check_cashe(tmp, line, &flag);
+	if (flag)
+		return (flag == 1 ? flag : del_all(&head, line));
+	if (!(buff = (char *)malloc(sizeof(BUFFER_SIZE + 1))))
+		return (del_all(&head, NULL));
+	buff_read(buff, tmp, line, &flag);
+	free(buff);
+	if (flag)
+		return (flag == 1 ? flag : del_all(&head, line));
+	if (!(*line = ft_strdup(tmp->cashe)))
+		return (del_all(&head, NULL));
+	return (del_one(&head, tmp->fd));
 }
-// free list when return (0);
-// when free line?
 
-int	main(int argc, char **argv)
+int	main(void)
 {
 	int 	fd;
 	int 	flag;
 	char 	*line;
 	
-	fd = open(argv[1], O_RDONLY);
-	if (fd < 0)
-		return;
+	fd = open("test2.txt", O_RDONLY);
 	while ((flag = get_next_line(fd, &line)) == 1)
 	{
 		printf("%d\n", flag);
