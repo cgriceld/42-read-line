@@ -3,7 +3,7 @@
 
 #include "get_next_line.h"
 
-#define BUFFER_SIZE 3
+//#define BUFFER_SIZE 3
 
 /*
 ** Reads and writes to line one string (before the first \n) from fd.
@@ -20,6 +20,7 @@ int	del_one(t_lstfd **head, const int fd)
 	t_lstfd *prev;
 
 	tmp = *head;
+	prev = *head;
 	while (tmp->fd != fd)
 	{
 		prev = tmp;
@@ -138,7 +139,8 @@ int	get_next_line(int fd, char **line)
 	free(buff);
 	if (flag)
 		return (flag == 1 ? flag : del_all(&head, line));
-	if (!(*line = ft_strdup(tmp->cashe)))
+	*line = tmp->cashe ? ft_strdup(tmp->cashe) : ft_strdup("");
+	if (!*line)
 		return (del_all(&head, NULL));
 	return (del_one(&head, tmp->fd));
 }
