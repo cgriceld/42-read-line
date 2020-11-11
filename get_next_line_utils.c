@@ -1,42 +1,54 @@
 #include "get_next_line.h"
 
-int	del_all(t_lstfd **head, char **line)
+int	del_one(t_lstfd **head, const int fd)
 {
 	t_lstfd *tmp;
+	t_lstfd *prev;
 
-	free(*line);
-	while (*head)
+	tmp = *head;
+	if (tmp->fd == fd)
 	{
-		tmp = *head;
-		*head = (*head)->next;
-		free(tmp->cashe);
+		*head = tmp->next;
+		if (tmp->cache)
+			free(tmp->cache);
 		free(tmp);
+		return (0);
 	}
-	return (-1);
+	while (tmp->fd != fd)
+	{
+		prev = tmp;
+		tmp = tmp->next;
+	}
+	prev->next = tmp->next;
+	if (tmp->cache)
+			free(tmp->cache);
+	free(tmp);
+    return (0);
 }
 
-/*
-** Returns length of the string s.
-*/
-size_t	ft_strlen(const char *s)
+char	*nchr(const char *s)
 {
-	const char *str;
-
-	str = s;
-	while (*str)
-		str++;
-	return (str - s);
+	while (*s && *s != '\n')
+		s++;
+	return (*s == '\n' ? (char *)s : NULL);
 }
 
-/*
-**
-*/
-char	*ft_strdup(const char *s1)
+void	ft_strcpy(char *dst, const char *src)
+{
+	while (*src)
+		*dst++ = *src++;
+	*dst = '\0';
+}
+
+char	*ft_strdup(char *s1)
 {
 	char *dup;
 	char *tmp;
 
-	dup = (char *)malloc(ft_strlen(s1) + 1);
+    tmp = s1;
+    while (*tmp)
+        tmp++;
+	dup = (char *)malloc(tmp - s1 + 1);
 	if (!dup)
 		return (NULL);
 	tmp = dup;
@@ -46,36 +58,26 @@ char	*ft_strdup(const char *s1)
 	return (dup);
 }
 
-/*
-**
-*/
-char	*ft_strjoin(char const *s1, char const *s2)
+char	*ft_strjoin(char *s1, char *s2)
 {
-	char	*join;
-	char	*tmp;
+	char *join;
+	char *tmp1;
+    char *tmp2;
 
-	if (!s1 || !s2)
-		return (NULL);
-	join = (char *)malloc(ft_strlen(s1) + ft_strlen(s2) + 1);
+	tmp1 = s1;
+    while (*tmp1)
+        tmp1++;
+    tmp2 = s2;
+    while (*tmp2)
+        tmp2++;
+	join = (char *)malloc((tmp1 - s1) + (tmp2 - s2) + 1);
 	if (!join)
 		return (NULL);
-	tmp = join;
+	tmp1 = join;
 	while (*s1)
-		*tmp++ = *s1++;
+		*tmp1++ = *s1++;
 	while (*s2)
-		*tmp++ = *s2++;
-	*tmp = '\0';
+		*tmp1++ = *s2++;
+	*tmp1 = '\0';
 	return (join);
-}
-
-/*
-** Locates the position of \n in cashe if it is.
-*/
-char	*ft_strchr(const char *s, int c)
-{
-char ch;
-	ch = (char)c;
-while (*s && *s != ch)
-		s++;
-return (*s == ch ? (char *)s : NULL);
 }
