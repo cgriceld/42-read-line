@@ -1,7 +1,7 @@
 # get_next_line
 
 `get_next_line` allows to read one text line at a time from a file. It also supports reading from \
-several fd without loosing a thread in each of the files.
+several fd without loosing a thread in each of the files.\
 Return:
 - 1 (found new line and there is still something to read further)
 - 0 (EOF)
