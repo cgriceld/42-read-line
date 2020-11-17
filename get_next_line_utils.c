@@ -1,9 +1,9 @@
 #include "get_next_line.h"
 
-int	del_one(t_lstfd **head, const int fd)
+int		lstdelone(t_lstfd **head, const int fd)
 {
 	t_lstfd *tmp;
-	t_lstfd *prev;
+	t_lstfd *previous;
 
 	tmp = *head;
 	if (tmp->fd == fd)
@@ -16,14 +16,14 @@ int	del_one(t_lstfd **head, const int fd)
 	}
 	while (tmp->fd != fd)
 	{
-		prev = tmp;
+		previous = tmp;
 		tmp = tmp->next;
 	}
-	prev->next = tmp->next;
+	previous->next = tmp->next;
 	if (tmp->cache)
-			free(tmp->cache);
+		free(tmp->cache);
 	free(tmp);
-    return (0);
+	return (0);
 }
 
 char	*nchr(const char *s)
@@ -33,11 +33,16 @@ char	*nchr(const char *s)
 	return (*s == '\n' ? (char *)s : NULL);
 }
 
-void	ft_strcpy(char *dst, const char *src)
+int		subc(char **cache, char *n)
 {
-	while (*src)
-		*dst++ = *src++;
-	*dst = '\0';
+	char *subcache;
+
+	subcache = ft_strdup(n);
+	if (!subcache)
+		return (-1);
+	free(*cache);
+	*cache = subcache;
+	return (1);
 }
 
 char	*ft_strdup(char *s1)
@@ -45,9 +50,9 @@ char	*ft_strdup(char *s1)
 	char *dup;
 	char *tmp;
 
-    tmp = s1;
-    while (*tmp)
-        tmp++;
+	tmp = s1;
+	while (*tmp)
+		tmp++;
 	dup = (char *)malloc(tmp - s1 + 1);
 	if (!dup)
 		return (NULL);
@@ -62,14 +67,14 @@ char	*ft_strjoin(char *s1, char *s2)
 {
 	char *join;
 	char *tmp1;
-    char *tmp2;
+	char *tmp2;
 
 	tmp1 = s1;
-    while (*tmp1)
-        tmp1++;
-    tmp2 = s2;
-    while (*tmp2)
-        tmp2++;
+	while (*tmp1)
+		tmp1++;
+	tmp2 = s2;
+	while (*tmp2)
+		tmp2++;
 	join = (char *)malloc((tmp1 - s1) + (tmp2 - s2) + 1);
 	if (!join)
 		return (NULL);

@@ -1,9 +1,6 @@
 #include "get_next_line.h"
 
-#include <stdio.h>
-#include <fcntl.h>
-
-int	del_all(t_lstfd **head, char **line)
+static int		lstclear(t_lstfd **head, char **line)
 {
 	t_lstfd *tmp;
 
@@ -20,7 +17,7 @@ int	del_all(t_lstfd **head, char **line)
 	return (-1);
 }
 
-t_lstfd	*lstfdnew(const int fd)
+static t_lstfd	*lstfdnew(const int fd)
 {
 	t_lstfd	*newnode;
 
@@ -33,41 +30,39 @@ t_lstfd	*lstfdnew(const int fd)
 	return (newnode);
 }
 
-void	check_cache(t_lstfd *tmp, char **line, int *flag)
+static void		check_cache(t_lstfd *tmp, char **line, int *flag)
 {
 	char *n;
-	char *tmpline;
 
 	if (!(tmp->cache))
-		return;
+		return ;
 	if ((n = nchr(tmp->cache)))
 	{
 		*n++ = '\0';
 		free(*line);
-		if (!(*line = ft_strdup(tmp->cache)))
+		if (!(*line = ft_strdup(tmp->cache)) || (subc(&(tmp->cache), n)) == -1)
 		{
 			*flag = -1;
-			return;
+			return ;
 		}
-		ft_strcpy(tmp->cache, n);
 		*flag = 1;
-		return;
+		return ;
 	}
-	tmpline = *line;
+	free(*line);
 	if (!(*line = ft_strdup(tmp->cache)))
 		*flag = -1;
-	free(tmpline);
 	free(tmp->cache);
 	tmp->cache = NULL;
 }
 
-void	process_buff(char *buff, char **line, t_lstfd *tmp, int *flag)
+static void		process_buff(char *buff, char **line, t_lstfd *tmp, int *flag)
 {
 	ssize_t	bytes_read;
 	char	*n;
 	char	*tmpline;
 
 	check_cache(tmp, line, flag);
+	bytes_read = 0;
 	while (!*flag && (bytes_read = read(tmp->fd, buff, BUFFER_SIZE)) > 0)
 	{
 		buff[bytes_read] = '\0';
@@ -77,7 +72,7 @@ void	process_buff(char *buff, char **line, t_lstfd *tmp, int *flag)
 			if (!(tmp->cache = ft_strdup(n)))
 			{
 				*flag = -1;
-				return;
+				return ;
 			}
 			*flag = 1;
 		}
@@ -86,35 +81,34 @@ void	process_buff(char *buff, char **line, t_lstfd *tmp, int *flag)
 			*flag = -1;
 		free(tmpline);
 	}
-	if (bytes_read < 0) 
-		*flag = -1;
+	*flag = (bytes_read < 0) ? -1 : *flag;
 }
 
-int	get_next_line(int fd, char **line)
+int				get_next_line(int fd, char **line)
 {
 	static t_lstfd	*head;
 	t_lstfd			*tmp;
 	char			*buff;
 	int				flag;
 
-	if (fd < 0 || !line || BUFFER_SIZE <= 0)
-		return (-1);
-	if (!head && !(head = lstfdnew(fd)))
+	if (BUFFER_SIZE <= 0 || fd < 0 || !line || \
+		(!head && !(head = lstfdnew(fd))))
 		return (-1);
 	tmp = head;
 	while (tmp->fd != fd)
 	{
 		if (!(tmp->next) && !(tmp->next = lstfdnew(fd)))
-			return (del_all(&head, NULL));
+			return (lstclear(&head, NULL));
 		tmp = tmp->next;
 	}
 	if (!(buff = (char *)malloc(BUFFER_SIZE + 1)))
-		return (del_all(&head, NULL));
+		return (lstclear(&head, NULL));
 	flag = 0;
-	*line = ft_strdup("");
+	if (!(*line = ft_strdup("")))
+		return (lstclear(&head, NULL));
 	process_buff(buff, line, tmp, &flag);
 	free(buff);
 	if (flag)
-		return (flag == 1 ? flag : del_all(&head, line));
-	return (del_one(&head, tmp->fd));
+		return (flag == 1 ? flag : lstclear(&head, line));
+	return (lstdelone(&head, tmp->fd));
 }
