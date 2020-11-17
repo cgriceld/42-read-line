@@ -36,10 +36,10 @@ static void		check_cache(t_lstfd *tmp, char **line, int *flag)
 
 	if (!(tmp->cache))
 		return ;
+	free(*line);
 	if ((n = nchr(tmp->cache)))
 	{
 		*n++ = '\0';
-		free(*line);
 		if (!(*line = ft_strdup(tmp->cache)) || (subc(&(tmp->cache), n)) == -1)
 		{
 			*flag = -1;
@@ -48,7 +48,6 @@ static void		check_cache(t_lstfd *tmp, char **line, int *flag)
 		*flag = 1;
 		return ;
 	}
-	free(*line);
 	if (!(*line = ft_strdup(tmp->cache)))
 		*flag = -1;
 	free(tmp->cache);
