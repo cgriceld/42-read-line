@@ -48,7 +48,7 @@ int	main(void)
 		}
 	}
 	close(fd1);
-	clode(fd2);
+	close(fd2);
 
 	return (0);
 }

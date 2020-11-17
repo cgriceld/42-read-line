@@ -4,7 +4,7 @@
 and as well run valgrind to test on leaks.
 
 `main_fd.c` - test reading from one file.\
-`main_multfd.c` - test reading from multiple files (read by turns one line from two files).\
+`main_multfd.c` - test reading from multiple files (read by turns one line from two files).
 
 Tests:
 - file with only one line
