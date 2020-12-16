@@ -33,13 +33,13 @@ char	*nchr(const char *s)
 	return (*s == '\n' ? (char *)s : NULL);
 }
 
-int		subc(char **cache, char *n)
+int		subcache(char **cache, char *n)
 {
 	char *subcache;
 
 	subcache = ft_strdup(n);
 	if (!subcache)
-		return (-1);
+		return (0);
 	free(*cache);
 	*cache = subcache;
 	return (1);

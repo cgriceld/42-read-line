@@ -40,15 +40,12 @@ static void		check_cache(t_lstfd *tmp, char **line, int *flag)
 	if ((n = nchr(tmp->cache)))
 	{
 		*n++ = '\0';
-		if (!(*line = ft_strdup(tmp->cache)) || (subc(&(tmp->cache), n)) == -1)
-		{
-			*flag = -1;
-			return ;
-		}
-		*flag = 1;
+		*flag = (!(*line = ft_strdup(tmp->cache)) || \
+				!subcache(&(tmp->cache), n)) ? -1 : 1;
 		return ;
 	}
-	if (!(*line = ft_strdup(tmp->cache)))
+	*line = ft_strdup(tmp->cache);
+	if (!*line)
 		*flag = -1;
 	free(tmp->cache);
 	tmp->cache = NULL;
@@ -68,15 +65,13 @@ static void		process_buff(char *buff, char **line, t_lstfd *tmp, int *flag)
 		if ((n = nchr(buff)))
 		{
 			*n++ = '\0';
-			if (!(tmp->cache = ft_strdup(n)))
-			{
-				*flag = -1;
-				return ;
-			}
-			*flag = 1;
+			*flag = !(tmp->cache = ft_strdup(n)) ? -1 : 1;
+			if (*flag < 0)
+				return;
 		}
 		tmpline = *line;
-		if (!(*line = ft_strjoin(*line, buff)))
+		*line = ft_strjoin(*line, buff);
+		if (!*line)
 			*flag = -1;
 		free(tmpline);
 	}

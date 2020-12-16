@@ -4,6 +4,10 @@
 # include <unistd.h>
 # include <stdlib.h>
 
+#ifndef BUFFER_SIZE
+# define BUFFER_SIZE 21
+#endif
+
 typedef struct		s_lstfd
 {
 	int				fd;
@@ -14,7 +18,7 @@ typedef struct		s_lstfd
 int					get_next_line(int fd, char **line);
 int					lstdelone(t_lstfd **head, const int fd);
 char				*nchr(const char *s);
-int					subc(char **cache, char *n);
+int					subcache(char **cache, char *n);
 char				*ft_strdup(char *s1);
 char				*ft_strjoin(char *s1, char *s2);
 
