@@ -18,3 +18,5 @@ Tests:
 - long file with BUFFER_SIZE=9999
 - long file with BUFFER_SIZE=1
 - BUFFER_SIZE is exactly the line length
+
+Project is written in accordance with School 21 coding style.
