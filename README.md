@@ -1,5 +1,7 @@
 # get_next_line
 
+42 project. The code is written in accordance with The Norm (42 coding style).
+
 `get_next_line` allows to read one text line at a time from a file. It also supports reading from \
 several fd without loosing a thread in each of the files.\
 Return:
@@ -18,5 +20,3 @@ Tests:
 - long file with BUFFER_SIZE=9999
 - long file with BUFFER_SIZE=1
 - BUFFER_SIZE is exactly the line length
-
-Project is written in accordance with School 21 coding style.
